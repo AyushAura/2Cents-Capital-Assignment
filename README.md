@@ -1,5 +1,5 @@
-# 2-Cents-Ventures-Assignment
-2 Cents Ventures Assignment
+# 2Cents-Capital-Assignment
+2Cents Capital Assignment
 # Quantitative Trading Portfolio (Quant Finance Assignment)
 
 This repository contains the project setup for a multi-alpha, multi-broker quantitative trading system.
