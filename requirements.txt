@@ -1,0 +1,21 @@
+# Core Trading Framework
+nautilus_trader>=1.0.0
+
+# Data Science & Analysis
+pandas
+numpy
+matplotlib
+scipy
+
+# Quant Reporting & Tuning
+quantstats
+optuna
+
+# Broker APIs
+python-binance
+ibapi
+kiteconnect
+
+# Utilities
+jupyterlab
+pyarrow
