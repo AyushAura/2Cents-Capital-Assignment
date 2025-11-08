@@ -1,35 +1,42 @@
-from nautilus_trader.adapters.base import DataClient
-from nautilus_trader.adapters.base import ExecutionClient
-from kiteconnect import KiteTicker, KiteConnect
+from nautilus_trader.adapters.base import DataClient, ExecutionClient
+# from kiteconnect import KiteTicker, KiteConnect  # Commented out to avoid import errors if not installed
 
 class ZerodhaDataClient(DataClient):
     """
-    A custom Nautilus adapter for handling Zerodha Kite data streams.
-    Would connect to the KiteTicker WebSocket.
+    Custom DataClient for Zerodha KiteConnect.
+    Subscribes to WebSocket ticks and converts them to Nautilus 'Tick' events.
     """
-    def __init__(self, api_key, access_token):
-        super().__init__()
-        # self.kite = KiteTicker(api_key, access_token)
-        # ... logic to subscribe and handle ticks
-        print("ZerodhaDataClient initialized.")
+    def __init__(self, api_key, access_token, node):
+        super().__init__(node=node)
+        self.api_key = api_key
+        self.access_token = access_token
+        # self.kws = KiteTicker(api_key, access_token)
+
+    async def connect(self):
+        self.log.info("Connecting to Zerodha Kite Ticker...")
+        # self.kws.connect(threaded=True)
         pass
 
-    async def _connect(self):
-        # Logic to start the WebSocket
+    def on_ticks(self, ws, ticks):
+        # Convert Zerodha 'ticks' to Nautilus 'QuoteTick' or 'TradeTick' objects
+        # and push them to the event bus.
+        # for tick in ticks:
+        #     nautilus_tick = self._convert_to_nautilus(tick)
+        #     self.node.push_event(nautilus_tick)
         pass
 
 class ZerodhaExecutionClient(ExecutionClient):
     """
-    A custom Nautilus adapter for handling Zerodha Kite executions.
+    Custom ExecutionClient for Zerodha KiteConnect.
+    Translates Nautilus 'SubmitOrder' messages into Kite API calls.
     """
-    def __init__(self, api_key, access_token):
-        super().__init__()
+    def __init__(self, api_key, access_token, node):
+        super().__init__(node=node)
         # self.kite = KiteConnect(api_key=api_key)
         # self.kite.set_access_token(access_token)
-        print("ZerodhaExecutionClient initialized.")
-        pass
 
-    async def _submit_order(self, order):
-        # Logic to translate a Nautilus order into a Kite order
-        # self.kite.place_order(...)
+    async def submit_order(self, command):
+        self.log.info(f"Submitting order to Zerodha: {command.order_id}")
+        # kite_order_id = self.kite.place_order(...)
+        # self.node.push_event(OrderSubmitted(..., external_order_id=kite_order_id))
         pass

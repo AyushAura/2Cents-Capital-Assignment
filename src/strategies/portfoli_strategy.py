@@ -1,56 +1,54 @@
 from nautilus_trader.core.actor import Actor
 from nautilus_trader.core.message import Event
-from nautilus_trader.model.data import Bar
+from nautilus_trader.model.data import Bar, QuoteTick, OrderBook
 from nautilus_trader.model.events import OrderFilled
 from nautilus_trader.strategy import Strategy
 
-# We would also import our alpha logic here
-# from src.alphas.alpha_1_pairs import Alpha1Pairs
-# from src.alphas.alpha_2_breakout import Alpha2Breakout
-# ...and so on
-
+# Import our alpha models
+from src.alphas.alpha_1_pairs import Alpha1Pairs
+from src.alphas.alpha_2_breakout import Alpha2Breakout
+from src.alphas.alpha_3_mtf import Alpha3MTF
+from src.alphas.alpha_4_multi_asset import Alpha4MultiAsset
+from src.alphas.alpha_5_orderbook import Alpha5OrderBook
 
 class PortfolioStrategy(Strategy):
     """
-    This single 'Strategy' actor manages the logic for all 5 alphas,
-    aggregates their signals, and manages portfolio-level risk.
+    The central strategy actor that manages all 5 alphas, aggregates their
+    signals, and manages portfolio-level risk and execution.
     """
     def __init__(self, config):
         super().__init__(config)
         
-        # We would initialize our 5 alpha models here
-        # self.alpha_1 = Alpha1Pairs(...)
-        # self.alpha_2 = Alpha2Breakout(...)
-        # ...
+        # Initialize all 5 alphas with their specific parameters
+        self.alpha_1 = Alpha1Pairs(asset_a="BTCUSDT.BINANCE", asset_b="ETHUSDT.BINANCE")
+        self.alpha_2 = Alpha2Breakout(instrument_id="EURUSD.IBKR", lookback=20)
+        self.alpha_3 = Alpha3MTF(instrument_id="GC.IBKR") # Gold Futures
+        self.alpha_4 = Alpha4MultiAsset(benchmark_id="NIFTY50.ZERODHA")
+        self.alpha_5 = Alpha5OrderBook(instrument_id="AAPL.IBKR")
         
-        self.log.info("PortfolioStrategy initialized.")
+        self.log.info("PortfolioStrategy initialized with 5 alphas.")
 
-    async def on_event(self, event: Event):
+    async def on_bar(self, bar: Bar):
         """
-        The main event loop. All data (bars, ticks, fills)
-        is processed here, one by one, in perfect time order.
+        Event handler for Bar data (1-minute, 1-hour, daily).
+        Dispatches data to the relevant bar-based alphas (1-4).
         """
+        # 1. Update Alphas
+        sig1 = self.alpha_1.on_bar(bar)
+        sig2 = self.alpha_2.on_bar(bar)
+        # ... dispatch to others based on instrument_id ...
         
-        if isinstance(event, Bar):
-            # Pass the bar data to all relevant alpha models
-            # for them to update their internal state (e.s., EMAs, z-scores)
-            
-            # signal_1 = self.alpha_1.on_bar(event)
-            # signal_3 = self.alpha_3.on_bar(event)
-            
-            # Then, we would aggregate signals and make a trade decision
-            # self.aggregate_signals()
-            pass
-            
-        elif isinstance(event, OrderFilled):
-            # Update our internal position keeping
-            self.log.info(f"Order filled: {event.order_id}")
-            pass
-            
-    def aggregate_signals(self):
-        # This is where the logic would go to combine all 5 alpha
-        # signals and decide on a final target portfolio.
+        # 2. Aggregate & Execute
+        # self.execute_portfolio_rebalance()
         pass
 
-    async def on_stop(self):
-        self.log.info("PortfolioStrategy stopped.")
+    async def on_order_book(self, book: OrderBook):
+        """
+        Event handler for L2 Order Book data.
+        Dispatches data specifically to Alpha 5 (HFT).
+        """
+        sig5 = self.alpha_5.on_l2_update(book)
+        if sig5 != 0:
+            self.log.info(f"Alpha 5 HFT Signal: {sig5}")
+            # self.execute_hft_order(sig5)
+        pass
